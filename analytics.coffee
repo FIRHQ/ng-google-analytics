@@ -3,19 +3,9 @@
 # @name fir.analytics
 # @description
 # # fir.analytics模块
-# 包含统计分析的指令、服务
+# 包含统计分析的指令、服务,(统计对象window.ga)
 ###
 analytics = angular.module "fir.analytics", ["ng"]
-# https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers.onerror
-# _pre = window.onerror
-# window.onerror = (msg,url,line,col,errorObj)->
-#   console.log '错误消息',msg
-#   console.log 'url',url
-#   console.log 'line',line
-#   console.log 'col',col
-#   console.log 'obj',errorObj
-#   window.preError = errorObj
-#   return _pre(msg,url,line,col,errorObj);
 
 
 
@@ -34,14 +24,16 @@ analytics.run(['$rootScope','$log',($rootScope,$log)->
     title =  document.title
     page = toState.name|| window.location.pathname
     $log.log 'pageview',page,'title',title
-    ga('send', 'pageview',{title,page})
+    ga('send', 'pageview',{title,page,location:page})
+    ga('set','location','')
     setTimeout(()->
       selects = ["input[type='button']","button","a"]
       for select in selects 
         buttons = $(select)
         for btn in buttons
           if !btn.attributes.ga && ( select isnt 'a' or !(!btn.attributes.href and !btn.attributes["ng-href"] and !btn.attributes["ng-click"])) 
-            console.log btn
+            # console.log btn
+            ;
       return ;
     ,1000)
   )
@@ -77,6 +69,3 @@ analytics.run(['$rootScope','$log',($rootScope,$log)->
 #       count--
 #   return @
 # ])
-
-#基类
-
