@@ -33,11 +33,6 @@ angular.module('fir.analytics').directive 'gaType', [()->
     that = @
     @type = type = attrs["gaType"]
     @gaArray = {}
-    # check.regist(gaElement,only)
-    # scope.$on("$destroy",()->
-    #   check.unRegist(gaElement)
-    # )
-
     ###*
     # private 
     # 用与解析element和attr构造出基础ga对象
@@ -51,11 +46,7 @@ angular.module('fir.analytics').directive 'gaType', [()->
       if !name
         $log.error 'ga analytics has no name while return ',element
         return ;
-      #name 的第一位不能为.
-      # if !type and (tindex = name.indexOf('.')) > 0 
-      #   type = name.substring(0,tindex)
-      #   name = name.substring(tindex + 1,name.length)
-      # type = type || attrs['type']
+
       if !type 
         $log.error 'ga analytics has no type, the name is ', name
         return ;
@@ -92,7 +83,8 @@ angular.module('fir.analytics').directive 'gaType', [()->
     ###
     @getGaElement = (name)->
       return @gaArray[name]
-    scope.controller = @
+    # 下一行代码用于测试。。。。 
+    # scope.controller = @
     return @
   ] 
 ]
