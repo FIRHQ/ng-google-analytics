@@ -9,6 +9,7 @@ module.exports = (grunt) ->
     doc: "doc"
     release:"release"
     src:"src"
+    test:"test"
 
   grunt.initConfig
     pkg: grunt.file.readJSON("package.json")
@@ -17,13 +18,19 @@ module.exports = (grunt) ->
       files:
         cwd:"<%= config.src %>"
         src:"**/*.coffee"
-        dest:"<%= config.compiled %>"
+        dest:"<%= config.compiled %>/src"
+        ext:".js"
+        expand:true
+      test:
+        cwd:"<%= config.test %>"
+        src:"**/*.coffee"
+        dest:"<%= config.compiled %>/test"
         ext:".js"
         expand:true
     copy:
       release:
         files:[{
-          cwd:"<%= config.compiled %>"
+          cwd:"<%= config.compiled %>/src"
           src:"**/*.js"
           expand:true
           dest:"<%= config.release %>"
@@ -36,7 +43,7 @@ module.exports = (grunt) ->
       unit:
         configFile:"karma.conf.js"
     ngdocs:
-      all:"<%= config.compiled %>/**/*.js"
+      all:"<%= config.compiled %>/src/**/*.js"
       options: 
         scripts: ['angular.js']
         html5Mode: false
@@ -48,6 +55,7 @@ module.exports = (grunt) ->
       server:
         options:
           base:['docs']
+
   grunt.registerTask('build',['clean','coffee'])
   grunt.registerTask('release',['build','copy:release'])
   grunt.registerTask('doc',['build','ngdocs','connect'])
