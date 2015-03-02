@@ -11,14 +11,14 @@
                  Declarative templates with data-binding, MVC, dependency injection and great
                  testability story all implemented with pure client-side JavaScript!">
   <meta name="fragment" content="!">
-  <title ng-bind-template="Api文档: {{partialTitle}}">Docs</title>
+  <title ng-bind-template="google-analytics Api: {{partialTitle}}">Docs</title>
   <script type="text/javascript">
     // dynamically add base tag as well as css and javascript files.
     // we can't add css/js the usual way, because some browsers (FF) eagerly prefetch resources
     // before the base attribute is added, causing 404 and terribly slow loading of the docs app.
     (function() {
       var indexFile = (location.pathname.match(/\/(index[^\.]*\.html)/) || ['', ''])[1],
-          rUrl = /(#!\/|doc|index[^\.]*\.html).*$/,
+          rUrl = /(#!\/|doc|api|index[^\.]*\.html).*$/,
           origin = location.origin || (window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '')),
           baseUrl = origin + location.href.substr(origin.length).replace(rUrl, indexFile),
           headEl = document.getElementsByTagName('head')[0],
@@ -79,7 +79,7 @@
         <div class="container">
           
           
-            <a  class="brand">Api文档</a>
+            <a  class="brand">google-analytics Api</a>
           
           <ul class="nav">
             <li ng-repeat="(url, name) in sections" ng-class="{active: isActivePath(url)}">

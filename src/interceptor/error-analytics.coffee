@@ -1,4 +1,5 @@
 #拦截错误的请求，并统计
+
 ###*
 # @ngdoc object
 # @name fir.analytics.analyticsInterceptor

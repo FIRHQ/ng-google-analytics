@@ -1,15 +1,26 @@
-#基类
+
+###*
+#@ngdoc object
+#@name fir.analytics.gaType.GaController
+#@property {string} type ga类型
+#@description
+#ga-type directive controller
+###
+
 ###*
 # @ngdoc directive
 # @name fir.analytics.directive:gaType
 # @restrict A
 # @description
 # 统计指令公用的父类，用于解析name、type、delay、only等所有统计用到的公用参数，推荐加上ga
+# 
+# {@link fir.analytics.gaType.GaController controller方法} 
+
 # @priority 10
 # @example
 # <pre><any ga ga-type='example'/></pre>
 # @param {string} ga-type 对应google analytics Category参数(分类)
-# @param {string} ga-name 对应google analytics Label参数，用于唯一标识element对象，如果ga-type值为空，将以.截取gaName的值，第一段位type，而后为name
+# @param {string|option} ga-name 对应google analytics Label参数，用于唯一标识element对象，如果ga-type值为空，将以.截取gaName的值，第一段位type，而后为name
 # @param {number|options} ga-delay 提交延迟，在该值内，发生的连续相同事件将被忽略
 # @param {boolean|options} ga-only ga-type/ga-name的值是否唯一，默认为true 
 ###
@@ -18,8 +29,7 @@ angular.module('fir.analytics').directive 'gaType', [()->
   priority:10
   # scope:{}
   controller:['$scope','$element','$attrs',(scope,elem,attrs)->
-    ###*
-    ###
+    
     that = @
     @type = type = attrs["gaType"]
     @gaArray = {}
@@ -27,9 +37,11 @@ angular.module('fir.analytics').directive 'gaType', [()->
     # scope.$on("$destroy",()->
     #   check.unRegist(gaElement)
     # )
+
     ###*
+    # private 
+    # 用与解析element和attr构造出基础ga对象
     ###
-    # udf()
     getGaProperty = (element,attr)->
       tag = element[0].tagName.toLowerCase()
       name = attr["gaName"] || attr["id"] || attr["name"]
@@ -38,7 +50,7 @@ angular.module('fir.analytics').directive 'gaType', [()->
 
       if !name
         $log.error 'ga analytics has no name while return ',element
-        throw new Error("no name in google analytics")
+        return ;
       #name 的第一位不能为.
       # if !type and (tindex = name.indexOf('.')) > 0 
       #   type = name.substring(0,tindex)
@@ -46,7 +58,7 @@ angular.module('fir.analytics').directive 'gaType', [()->
       # type = type || attrs['type']
       if !type 
         $log.error 'ga analytics has no type, the name is ', name
-        throw new Error("no type in google analytics")
+        return ;
       #ga对象
       gaElement = {
         tag
@@ -57,21 +69,26 @@ angular.module('fir.analytics').directive 'gaType', [()->
       }
       if that.gaArray[name] && only
         $log.error 'some name ',name,' type ',type,' element ',element
-        throw new Error("some name with other element")
+        return ;
       that.gaArray[name] = gaElement
 
       return gaElement
     
     ###*
     # @ngdoc function
-    # @name fir.analytics.gaType#initGaElement
-    # @methodOf fir.analytics.directive:gaType
+    # @name fir.analytics.gaType.GaController#initGaElement
+    # @methodOf fir.analytics.gaType.GaController
     # @description 
     # 用于获取ga元素对象
     ###
     @initGaElement = (element,attr)->
       return getGaProperty(element,attr)
     ###*
+    # @ngdoc function
+    # @name fir.analytics.gaType.GaController#getGaElement
+    # @methodOf fir.analytics.gaType.GaController
+    # @description 
+    # 通过名字获取ga对象，由于名字可能重复，不建议使用（可能移除）
     ###
     @getGaElement = (name)->
       return @gaArray[name]

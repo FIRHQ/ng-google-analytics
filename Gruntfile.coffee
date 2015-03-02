@@ -4,7 +4,7 @@ module.exports = (grunt) ->
   require("matchdep").filterDev("grunt-*").forEach grunt.loadNpmTasks
   
   config =
-    compiled: ".tmp"
+    compiled: ".compiled"
     dist: "dist"
     doc: "doc"
     release:"release"
@@ -36,14 +36,21 @@ module.exports = (grunt) ->
       unit:
         configFile:"karma.conf.js"
     ngdocs:
-      doc:"<%= config.compiled %>/**/*.js"
+      all:"<%= config.compiled %>/**/*.js"
       options: 
         scripts: ['angular.js']
         html5Mode: false
-        title:"Api文档"
-
+        title:"google-analytics Api"
+    connect: 
+      options: 
+        keepalive: true
+        port:9000
+      server:
+        options:
+          base:['docs']
   grunt.registerTask('build',['clean','coffee'])
   grunt.registerTask('release',['build','copy:release'])
+  grunt.registerTask('doc',['build','ngdocs','connect'])
   grunt.registerTask "default", ["build"]
   grunt.registerTask "r", ["release"]
   return 
