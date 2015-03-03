@@ -48,17 +48,35 @@ module.exports = (grunt) ->
         scripts: ['angular.js']
         html5Mode: false
         title:"google-analytics Api"
+    watch:
+      options:
+        livereload: true
+      coffee:
+        files:["src/**/*.coffee","test/**/*.coffee"]
+        tasks:['coffee']
+    concurrent:
+      options:
+        logConcurrentOutput: true
+      docs:['connect:docs']
+      sample:['watch','connect:sample']
+      test:['watch','karma']
     connect: 
       options: 
         keepalive: true
         port:9000
-      server:
+      docs:
         options:
           base:['docs']
+      sample:
+        options:
+          base:'./'
 
   grunt.registerTask('build',['clean','coffee'])
   grunt.registerTask('release',['build','copy:release'])
-  grunt.registerTask('doc',['build','ngdocs','connect'])
+  grunt.registerTask('doc',['build','ngdocs','connect:docs'])
+  grunt.registerTask('s',['build','concurrent:sample'])
+  grunt.registerTask('t',['build','concurrent:test'])
+
   grunt.registerTask "default", ["build"]
   grunt.registerTask "r", ["release"]
   return 

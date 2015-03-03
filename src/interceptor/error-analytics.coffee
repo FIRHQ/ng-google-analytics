@@ -15,7 +15,7 @@
 # </pre>
 # @requires $q
 ###
-analytics.factory("analyticsInterceptor",['$q',($q)->
+angular.module('fir.analytics').factory("analyticsInterceptor",['$q',($q)->
   return {
     responseError:(resq)->
       #不记录params列表

@@ -9,17 +9,36 @@
 # @param {string} ga-event 事件名，如果是多事件，以','分隔 ，默认为'click'
 
 ###
-angular.module('fir.analytics').directive 'gaEvent', ['$log',($log)->
+eventList = ['click','change','dblclick','keydown','keyup', 'keypress', 'submit']
+  
+camelCase = ()->
+  pre = 'ng'
+  array = []
+  for event in eventList
+    array.push event[0].toUpperCase() + event.substr(1)
+  return array
+
+attrEventList = camelCase()
+
+seachEvent = (attr)->
+  ar = []
+  for ev,i in attrEventList
+    if attr['ng' + ev] 
+      ar.push(eventList[i])
+  return ar.join(',')
+
+angular.module('fir.analytics').directive 'gaEvent', ['$log','$compile','$rootScope',($log,$compile,$rootScope)->
   restrict: 'A'
   priority:1
   require:"?^gaType" #如果不存在不影响程序的其他正常功能
   link: (scope, elem, attrs,gaController)->
-    #input type  || a 
     if !gaController
       $log.log 'no ga-type',elem[0]
       return ;
-    events = (attrs["gaEvent"] || "click").split(",")
-    gaElement = gaController.initGaElement(elem,attrs)
+    gaElement = gaController.getGaElement(elem,attrs)
+
+    attr_events = attrs['gaEvent']
+    events = (attrs["gaEvent"] || seachEvent(attrs) || "click").split(",")
     gaElement.events = []
 
     angular.forEach(events,(evt,k)->
@@ -40,12 +59,15 @@ angular.module('fir.analytics').directive 'gaEvent', ['$log',($log)->
           # $log.log 'ga directive:',gaElement.type,action,gaElement.name,num
           ga("send","event",gaElement.type,action,gaElement.name,0)
           num = 0
+          return ;
         ,gaElement.delay)
+        return ;
       )
       return ;
     )
     scope.$on('$destroy',()->
       elem.off()
+      return;
     )
     return ;
 ]

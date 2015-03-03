@@ -24,7 +24,7 @@
 # @param {number|options} ga-delay 提交延迟，在该值内，发生的连续相同事件将被忽略
 # @param {boolean|options} ga-only ga-type/ga-name的值是否唯一，默认为true 
 ###
-angular.module('fir.analytics').directive 'gaType', [()->
+angular.module('fir.analytics').directive 'gaType', ['$log',($log)->
   restrict: 'A'
   priority:10
   # scope:{}
@@ -38,6 +38,8 @@ angular.module('fir.analytics').directive 'gaType', [()->
     # 用与解析element和attr构造出基础ga对象
     ###
     getGaProperty = (element,attr)->
+      return element[0].ga if element[0].ga
+
       tag = element[0].tagName.toLowerCase()
       name = attr["gaName"] || attr["id"] || attr["name"]
       delay = attr["gaDelay"] || 150 #ms 
@@ -48,9 +50,10 @@ angular.module('fir.analytics').directive 'gaType', [()->
         return ;
 
       if !type 
-        $log.error 'ga analytics has no type, the name is ', name
+        $log.error 'ga analytics has no type, the name is ', name,element
         return ;
-      #ga对象
+
+      #构造ga对象
       gaElement = {
         tag
         name
@@ -58,11 +61,13 @@ angular.module('fir.analytics').directive 'gaType', [()->
         delay
         only
       }
-      if that.gaArray[name] && only
+      # 之前已经判断过是否解析过，在此处若有同名的，则一定不是同一个element，
+      if that.gaArray[name] and only
         $log.error 'some name ',name,' type ',type,' element ',element
         return ;
-      that.gaArray[name] = gaElement
+      that.gaArray[name] = true 
 
+      element[0].ga = gaElement
       return gaElement
     
     ###*
@@ -72,19 +77,8 @@ angular.module('fir.analytics').directive 'gaType', [()->
     # @description 
     # 用于获取ga元素对象
     ###
-    @initGaElement = (element,attr)->
+    @getGaElement = (element,attr)->
       return getGaProperty(element,attr)
-    ###*
-    # @ngdoc function
-    # @name fir.analytics.gaType.GaController#getGaElement
-    # @methodOf fir.analytics.gaType.GaController
-    # @description 
-    # 通过名字获取ga对象，由于名字可能重复，不建议使用（可能移除）
-    ###
-    @getGaElement = (name)->
-      return @gaArray[name]
-    # 下一行代码用于测试。。。。 
-    # scope.controller = @
     return @
   ] 
 ]

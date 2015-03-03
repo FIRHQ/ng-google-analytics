@@ -16,7 +16,7 @@
  */
 
 (function() {
-  analytics.factory("analyticsInterceptor", [
+  angular.module('fir.analytics').factory("analyticsInterceptor", [
     '$q', function($q) {
       return {
         responseError: function(resq) {
