@@ -1,7 +1,7 @@
 {
   "name": "google-analytics",
   "description": "google analytics directive for AngularJS ",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "dependencies": {
     "matchdep": "^0.3.0"
   },
@@ -22,6 +22,7 @@
     "grunt-karma": "^0.10.1",
     "karma-junit-reporter": "^0.2.2",
     "karma-firefox-launcher": "^0.1.4",
-    "grunt-ngdocs": "~0.2.6"
+    "grunt-ngdocs": "~0.2.6",
+    "grunt-bump": "^0.3.0"
   }
 }

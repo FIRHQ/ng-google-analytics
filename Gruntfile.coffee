@@ -39,9 +39,18 @@ module.exports = (grunt) ->
       '<%=config.compiled%>'
       '<%=config.doc%>'
     ]
+    bump:
+      options:
+        files:['package.json','bower.json']
+        commitFiles:['-a']
+        pushTo:'gitlab'
     karma:
       unit:
         configFile:"karma.conf.js"
+      backgrund:
+        configFile:"karma.conf.js"
+        options:
+          singleRun:true
     ngdocs:
       all:"<%= config.compiled %>/src/**/*.js"
       options: 
@@ -59,7 +68,7 @@ module.exports = (grunt) ->
         logConcurrentOutput: true
       docs:['connect:docs']
       sample:['watch','connect:sample']
-      test:['watch','karma']
+      test:['watch','karma:unit']
     connect: 
       options: 
         keepalive: true
@@ -72,7 +81,7 @@ module.exports = (grunt) ->
           base:'./'
 
   grunt.registerTask('build',['clean','coffee'])
-  grunt.registerTask('release',['build','copy:release'])
+  grunt.registerTask('release',['build','karma:backgrund','copy:release','bump'])
   grunt.registerTask('doc',['build','ngdocs','connect:docs'])
   grunt.registerTask('s',['build','concurrent:sample'])
   grunt.registerTask('t',['build','concurrent:test'])
