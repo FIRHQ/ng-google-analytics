@@ -35,9 +35,14 @@ module.exports = (grunt) ->
           expand:true
           dest:"<%= config.release %>"
         }]
+    concat:
+      all:
+        src:['<%= config.compiled %>/src/analytics.js','<%= config.compiled %>/src/**/*.js','!<%= config.compiled %>/src/check/*.js','!<%= config.compiled %>/src/directives/time.js']
+        dest:"<%= config.release %>/google-analytics.js"
     clean:[
       '<%=config.compiled%>'
       '<%=config.doc%>'
+      '<%=config.release%>'
     ]
     bump:
       options:
