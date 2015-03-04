@@ -86,7 +86,7 @@ module.exports = (grunt) ->
           base:'./'
 
   grunt.registerTask('build',['clean','coffee'])
-  grunt.registerTask('release',['build','karma:backgrund','copy:release','bump'])
+  grunt.registerTask('release',['build','karma:backgrund','copy:release','concat','bump'])
   grunt.registerTask('doc',['build','ngdocs','connect:docs'])
   grunt.registerTask('s',['build','concurrent:sample'])
   grunt.registerTask('t',['build','concurrent:test'])
