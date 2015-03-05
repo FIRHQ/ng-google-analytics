@@ -24,7 +24,7 @@
       });
       $rootScope.$on('$stateChangeSuccess', function(evt, toState) {
         var page, title;
-        title = document.title;
+        title = $rootScope.title || document.title;
         page = toState.name || window.location.pathname;
         $log.log('pageview', page, 'title', title);
         ga('send', 'pageview', {
@@ -32,21 +32,7 @@
           page: page,
           location: page
         });
-        ga('set', 'location', '');
-        return setTimeout(function() {
-          var btn, buttons, select, selects, _i, _j, _len, _len1;
-          selects = ["input[type='button']", "button", "a"];
-          for (_i = 0, _len = selects.length; _i < _len; _i++) {
-            select = selects[_i];
-            buttons = $(select);
-            for (_j = 0, _len1 = buttons.length; _j < _len1; _j++) {
-              btn = buttons[_j];
-              if (!btn.attributes.ga && (select !== 'a' || !(!btn.attributes.href && !btn.attributes["ng-href"] && !btn.attributes["ng-click"]))) {
-
-              }
-            }
-          }
-        }, 1000);
+        return ga('set', 'location', '');
       });
       return $rootScope.$on('cancellation', function(evt) {
         return ga('set', '&uid', null);
