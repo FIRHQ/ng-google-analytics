@@ -26,16 +26,16 @@ analytics.run(['$rootScope','$log',($rootScope,$log)->
     $log.log 'pageview',page,'title',title
     ga('send', 'pageview',{title,page,location:page})
     ga('set','location','')
-    setTimeout(()->
-      selects = ["input[type='button']","button","a"]
-      for select in selects 
-        buttons = $(select)
-        for btn in buttons
-          if !btn.attributes.ga && ( select isnt 'a' or !(!btn.attributes.href and !btn.attributes["ng-href"] and !btn.attributes["ng-click"])) 
-            # console.log btn
-            ;
-      return ;
-    ,1000)
+    # setTimeout(()->
+    #   selects = ["input[type='button']","button","a"]
+    #   for select in selects 
+    #     buttons = $(select)
+    #     for btn in buttons
+    #       if !btn.attributes.ga && ( select isnt 'a' or !(!btn.attributes.href and !btn.attributes["ng-href"] and !btn.attributes["ng-click"])) 
+    #         # console.log btn
+    #         ;
+    #   return ;
+    # ,1000)
   )
   #注销
   $rootScope.$on('cancellation',(evt)->
