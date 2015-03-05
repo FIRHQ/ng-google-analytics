@@ -21,7 +21,7 @@ analytics.run(['$rootScope','$log',($rootScope,$log)->
   )
   #切换视图
   $rootScope.$on('$stateChangeSuccess',(evt, toState)->
-    title =  document.title
+    title =  $rootScope.title || document.title
     page = toState.name|| window.location.pathname
     $log.log 'pageview',page,'title',title
     ga('send', 'pageview',{title,page,location:page})
