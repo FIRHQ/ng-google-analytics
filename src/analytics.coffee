@@ -7,14 +7,33 @@
 ###
 analytics = angular.module "fir.analytics", ["ng"]
 
+###*
+# @ngdoc object
+# @name fir.analytics.analyticsConfig
+# @description
+# 用于设置统计分析的一些变量
+# @property {string} preState 设置统计ui.router.$state.name时所加的前缀，防止可能出现2个application有同样地ui.state
+###
+analytics.provider('analyticsConfig',()->
+  that = @
+  @preState = ""
+  @$get = ()->
+    return {
+      preState:(value)->
+        if value 
+          that.preState = value 
+        return if that.preState then that.preState+ "." else '' 
 
-
+    }
+  return @
+)
 #事件响应并统计
-analytics.run(['$rootScope','$log',($rootScope,$log)->
+analytics.run(['$rootScope','$log','analyticsConfig',($rootScope,$log,analyticsConfig)->
+  console.log 
   if !window.ga 
     window.ga = ()->
       return ;
-  #登录
+  #登录analyticsConfig
   $rootScope.$on('authenticated',(evt,param)->
     user = param.user
     ga('set','&uid',user.id)
@@ -22,7 +41,7 @@ analytics.run(['$rootScope','$log',($rootScope,$log)->
   #切换视图
   $rootScope.$on('$stateChangeSuccess',(evt, toState)->
     title =  $rootScope.title || document.title
-    page = toState.name|| window.location.pathname
+    page = analyticsConfig.preState() + toState.name|| window.location.pathname
     $log.log 'pageview',page,'title',title
     ga('send', 'pageview',{title,page,location:page})
     ga('set','location','')
