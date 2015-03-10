@@ -65,6 +65,7 @@ module.exports = (grunt) ->
             'bower_components/angular-ui-router/release/angular-ui-router.js',
             'bower_components/angular-mocks/angular-mocks.js',
             'release/google-analytics.js'
+            '.compiled/test/**/*.js'
           ]
     removelogging:{
       dist:{
