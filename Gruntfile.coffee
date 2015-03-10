@@ -37,7 +37,7 @@ module.exports = (grunt) ->
         }]
     concat:
       all:
-        src:['<%= config.compiled %>/src/analytics.js','<%= config.compiled %>/src/**/*.js','!<%= config.compiled %>/src/check/*.js','!<%= config.compiled %>/src/directives/time.js']
+        src:['<%= config.release %>/src/analytics.js','<%= config.release %>/src/**/*.js','!<%= config.release %>/src/check/*.js','!<%= config.release %>/src/directives/time.js']
         dest:"<%= config.release %>/google-analytics.js"
     clean:[
       '<%=config.compiled%>'
@@ -56,6 +56,15 @@ module.exports = (grunt) ->
         configFile:"karma.conf.js"
         options:
           singleRun:true
+    removelogging:{
+      dist:{
+        src:"<%= config.compiled %>/src/**/*.js"
+        options:{
+          namespace:["console","\\$log"]
+          method:["log"]
+        }
+      }
+    }
     ngdocs:
       all:"<%= config.compiled %>/src/**/*.js"
       options: 
@@ -86,7 +95,7 @@ module.exports = (grunt) ->
           base:'./'
 
   grunt.registerTask('build',['clean','coffee'])
-  grunt.registerTask('release',['build','karma:backgrund','copy:release','concat','bump'])
+  grunt.registerTask('release',['build','karma:backgrund','removelogging','copy:release','concat'])
   grunt.registerTask('doc',['build','ngdocs','connect:docs'])
   grunt.registerTask('s',['build','concurrent:sample'])
   grunt.registerTask('t',['build','concurrent:test'])

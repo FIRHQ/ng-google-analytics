@@ -23,6 +23,7 @@
     "karma-junit-reporter": "^0.2.2",
     "karma-firefox-launcher": "^0.1.4",
     "grunt-ngdocs": "~0.2.6",
-    "grunt-bump": "^0.3.0"
+    "grunt-bump": "^0.3.0",
+    "grunt-remove-logging": "^0.2.0"
   }
 }
