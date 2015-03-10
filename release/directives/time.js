@@ -21,7 +21,7 @@
           var timeLine;
           this.endTime = new Date();
           timeLine = this.endTime - this.startTime;
-          console.log('timeLine', timeLine);
+          
           ga('send', 'timing', this.category, this.name, timeLine, this.remark);
           return timeLine;
         };
@@ -88,7 +88,7 @@
           watchProgress = null;
           scope.$watch(watchStart, function(n, o) {
             var maxSize;
-            console.log('watch start');
+            
             if (start && (!n || n === '0' || n === 0)) {
               timeServer.destroy();
               start = false;
@@ -96,11 +96,11 @@
               watchProgress = null;
             } else if (!start && (n === true || n === '1' || n === 1)) {
               maxSize = parseInt(attrs["max"] || 100);
-              console.log('maxSize', maxSize);
+              
               timeServer.start();
               start = true;
               watchProgress = scope.$watch(watch, function(n) {
-                console.log('size change', n);
+                
                 if (parseInt(n) >= maxSize) {
                   timeServer.end();
                   start = false;

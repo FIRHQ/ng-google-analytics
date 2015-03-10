@@ -53,11 +53,11 @@
               delay = attr["gaDelay"] || 150;
               only = attr["gaOnly"] === '0' || attr["gaOnly"] === 'false' ? false : true;
               if (!name) {
-                $log.error('ga analytics has no name while return ', element);
+                
                 return;
               }
               if (!type) {
-                $log.error('ga analytics has no type, the name is ', name, element);
+                
                 return;
               }
               gaElement = {
@@ -68,7 +68,7 @@
                 only: only
               };
               if (that.gaArray[name] && only) {
-                $log.error('some name ', name, ' type ', type, ' element ', element);
+                
                 return;
               }
               that.gaArray[name] = true;

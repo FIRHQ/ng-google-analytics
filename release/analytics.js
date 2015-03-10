@@ -57,7 +57,7 @@
         var page, title;
         title = $rootScope.title || document.title;
         page = analyticsConfig.preState() + toState.name || window.location.pathname;
-        $log.log('pageview', page, 'title', title);
+        
         ga('send', 'pageview', {
           title: title,
           page: page,

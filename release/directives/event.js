@@ -49,7 +49,7 @@
         link: function(scope, elem, attrs, gaController) {
           var attr_events, events, gaElement;
           if (!gaController) {
-            $log.log('no ga-type', elem[0]);
+            
             return;
           }
           gaElement = gaController.getGaElement(elem, attrs);
