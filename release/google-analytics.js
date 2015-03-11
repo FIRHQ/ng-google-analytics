@@ -291,13 +291,18 @@
        * 
        * - {boolean} - params - 设置是否收集请求的参数 默认为false
        * - {method} - method - 设置是否收集method 默认为true
-       * - {status} - status - 设置是否时候请求状态 默认为true
+       * - {status} - status - 设置是否收集请求状态 默认为true
+       * - {status} - headers - 设置是否收集请求报文头 默认为false
+       * - {status} - result - 设置是否收集请求的返回结果 默认为false
+       * - {status} - all - 统一设置 默认为false
        */
       this.collect = {
         params: false,
         method: true,
         status: true,
-        headers: false
+        headers: false,
+        result: false,
+        all: false
       };
 
       /**
@@ -342,12 +347,16 @@
        * 将error对象根据collect设置转成string
        */
       collectParamsToString = function(error) {
-        var description, name, setting, value, _ref;
+        var all, description, name, setting, value, _ref;
         description = "";
+        all = that.collect.all;
         _ref = that.collect;
         for (name in _ref) {
           setting = _ref[name];
-          if (setting) {
+          if (name === 'all') {
+            continue;
+          }
+          if (setting || all) {
             value = error[name];
             if (!value) {
               value = "undefined";
@@ -424,7 +433,8 @@
                 method: resq.config.method,
                 params: resq.config.data,
                 status: resq.status,
-                headers: resq.headers
+                headers: resq.config.headers,
+                result: resq.data
               };
               if (that.isReplace) {
                 error = that.replaceMethod(error);
