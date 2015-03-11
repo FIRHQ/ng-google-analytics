@@ -126,7 +126,7 @@
        */
       this.$sendException = function(error) {
         var description;
-        description = "url:" + error;
+        description = "url:" + error.url;
         description += collectParamsToString(error);
         ga('send', 'exception', {
           exDescription: description,
@@ -163,7 +163,7 @@
                 status: resq.status
               };
               if (that.isReplace) {
-                error = that.replaceMethod(url, method, params, status);
+                error = that.replaceMethod(error);
               }
               switch (that.model) {
                 case 'event':
