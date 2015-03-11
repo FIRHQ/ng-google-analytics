@@ -113,7 +113,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # @param {object} error 错误请求的详细信息
   ###
   @$sendException = (error)->
-    description = "url:#{error}" 
+    description = "url:#{error.url}" 
     description += collectParamsToString(error)
     #统计出错
     ga('send','exception',{
@@ -151,7 +151,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           status : resq.status
         }
         if that.isReplace
-          error = that.replaceMethod(url,method,params,status)
+          error = that.replaceMethod(error)
 
         switch that.model
           when 'event' then that.$sendExceptionWithEvent(error)
