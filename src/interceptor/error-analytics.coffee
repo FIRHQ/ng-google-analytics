@@ -62,7 +62,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @replaceMethod = (error)->
     #替换url中可能存在的id
     url = error.url 
-    error.url = url.replace(/token=\w+/,"token=:token").replace(/\w{24}/,":id").replace(/\w{24}/,":id")
+    error.url = url.replace(/token=\w+/gi,"token=:token").replace(/\w{24}/gi,":id").replace(/\w{24}/,":id")
     return error
   ###*
   # @ngdoc property
