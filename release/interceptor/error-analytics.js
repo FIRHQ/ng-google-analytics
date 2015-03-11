@@ -34,7 +34,8 @@
       this.collect = {
         params: false,
         method: true,
-        status: true
+        status: true,
+        headers: false
       };
 
       /**
@@ -159,8 +160,9 @@
               error = {
                 url: resq.config.url,
                 method: resq.config.method,
-                params: resq.config.params,
-                status: resq.status
+                params: resq.config.data,
+                status: resq.status,
+                headers: resq.headers
               };
               if (that.isReplace) {
                 error = that.replaceMethod(error);

@@ -1,7 +1,7 @@
 {
   "name": "google-analytics",
   "description": "google analytics directive for AngularJS ",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "dependencies": {
     "matchdep": "^0.3.0"
   },
