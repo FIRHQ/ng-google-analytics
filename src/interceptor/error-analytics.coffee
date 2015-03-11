@@ -27,7 +27,10 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # 
   # - {boolean} - params - 设置是否收集请求的参数 默认为false
   # - {method} - method - 设置是否收集method 默认为true
-  # - {status} - status - 设置是否时候请求状态 默认为true
+  # - {status} - status - 设置是否收集请求状态 默认为true
+  # - {status} - headers - 设置是否收集请求报文头 默认为false
+  # - {status} - result - 设置是否收集请求的返回结果 默认为false
+  # - {status} - all - 统一设置 默认为false
   ###
   #是否收集(参数、方法、状态)信息
   @collect = {
@@ -36,6 +39,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     status:true #状态
     headers:false #请求的头
     result:false #返回的结果
+    all:false #是否统计所有
   }
   ###*
   # @ngdoc function
@@ -78,8 +82,10 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   ###
   collectParamsToString = (error)->
     description = ""
+    all = that.collect.all
     for name,setting of that.collect
-      if setting 
+      continue if name is 'all'
+      if setting or all
         value = error[name]
         if !value
           value = "undefined"
