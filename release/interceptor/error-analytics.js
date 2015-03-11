@@ -175,7 +175,7 @@
                 result: resq.data
               };
               if (that.isReplace) {
-                error = that.replaceMethod(error);
+                that.replaceMethod(error);
               }
               switch (that.model) {
                 case 'event':
