@@ -35,6 +35,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     method:true #方法
     status:true #状态
     headers:false #请求的头
+    result:false #返回的结果
   }
   ###*
   # @ngdoc function
@@ -150,7 +151,8 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           method : resq.config.method
           params : resq.config.data
           status : resq.status
-          headers:resq.headers
+          headers:resq.config.headers
+          result:resq.data
         }
         if that.isReplace
           error = that.replaceMethod(error)
