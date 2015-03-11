@@ -88,12 +88,15 @@ module.exports = (grunt) ->
       coffee:
         files:["src/**/*.coffee","test/**/*.coffee"]
         tasks:['coffee']
+      docs:
+        files:[".compiled/src/**/*.js"]
+        tasks:["ngdocs"]
     concurrent:
       options:
         logConcurrentOutput: true
-      docs:['connect:docs']
-      sample:['watch','connect:sample']
-      test:['watch','karma:unit']
+      docs:['watch','connect:docs']
+      sample:['watch:coffee','connect:sample']
+      test:['watch:coffee','karma:unit']
     connect: 
       options: 
         keepalive: true
@@ -110,6 +113,8 @@ module.exports = (grunt) ->
 
   grunt.registerTask('release',['build','karma:backgrund','removelogging','copy:release','concat','karma:release','bump'])
   grunt.registerTask('doc',['build','ngdocs','connect:docs'])
+  grunt.registerTask('wd',['build','ngdocs','concurrent:docs'])
+
   grunt.registerTask('s',['build','concurrent:sample'])
   grunt.registerTask('t',['build','concurrent:test'])
 
