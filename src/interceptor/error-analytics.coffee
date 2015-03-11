@@ -161,7 +161,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           result:resq.data
         }
         if that.isReplace
-          error = that.replaceMethod(error)
+          that.replaceMethod(error)
 
         switch that.model
           when 'event' then that.$sendExceptionWithEvent(error)
