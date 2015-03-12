@@ -27,7 +27,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # 
   # - {boolean} - params - 设置是否收集请求的参数 默认为false
   # - {method} - method - 设置是否收集method 默认为true
-  # - {status} - status - 设置是否收集请求状态 默认为true
+  # - {status|delete} - status - 设置是否收集请求状态 默认为true(已删除，相关信息品在url后方)
   # - {status} - headers - 设置是否收集请求报文头 默认为false
   # - {status} - result - 设置是否收集请求的返回结果 默认为false
   # - {status} - all - 统一设置 默认为false
@@ -36,11 +36,13 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @collect = {
     params:false  #参数
     method:true #方法
-    status:true #状态
+    # status:true #状态，记在url中 
     headers:false #请求的头
     result:false #返回的结果
     all:false #是否统计所有
   }
+  #转成字符串时字段顺序
+  order = ["method","params","headers","result"]
   ###*
   # @ngdoc function
   # @name replaceMethod
@@ -83,9 +85,9 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   collectParamsToString = (error)->
     description = ""
     all = that.collect.all
-    for name,setting of that.collect
-      continue if name is 'all'
-      if setting or all
+    for name in order
+      setting = that.collect[name]
+      if all or setting
         value = error[name]
         if !value
           value = "undefined"
@@ -94,6 +96,17 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         description+=",#{name}:" + value
     # description = if description.length > 1 then description.substr(1) else description
     return description
+  ###*
+  # @ngdoc function
+  # @name beforeSend
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 发送统计前调用，如果返回false、null、undefined将不会发送统计,可在config中覆盖
+  # @param {object} error 错误请求的详细信息
+  # @return {boolean} 如果为true则发送统计，false则取消发送此次统计
+  ###
+  @beforeSend = (error)->
+    return true;
   ###*
   # @ngdoc function
   # @name $sendExceptionWithEvent
@@ -107,8 +120,11 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @$sendExceptionWithEvent = (error)->
     description = collectParamsToString(error)
     description = if description.length > 1 then description.substr(1) else description
-    #category,action,name
-    ga('send','event',"exception_event",description,error.url)
+    if @beforeSend(error)
+      #category,action,name
+      ga('send','event',"exception_event",description,error.url+":"+error.status)
+      return true
+    return false
     
   ###*
   # @ngdoc function
@@ -121,14 +137,16 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # @param {object} error 错误请求的详细信息
   ###
   @$sendException = (error)->
-    description = "url:#{error.url}" 
+    description = "url:#{error.url},status:#{error.status}" 
     description += collectParamsToString(error)
     #统计出错
-    ga('send','exception',{
-      exDescription:description
-      exFatal:false
-    })  
-    return true    
+    if @beforeSend(error)
+      ga('send','exception',{
+        exDescription:description
+        exFatal:false
+      })  
+      return true 
+    return false   
   
   ###*
   # @ngdoc object

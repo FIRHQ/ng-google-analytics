@@ -112,6 +112,9 @@ module.exports = (grunt) ->
   grunt.registerTask('rs',['build','karma:backgrund','removelogging','copy:release','concat'])
 
   grunt.registerTask('release',['build','karma:backgrund','removelogging','copy:release','concat','karma:release','bump'])
+
+  grunt.registerTask('rc',['build','karma:backgrund','removelogging','copy:release','concat','karma:release','bump:prerelease'])
+  
   grunt.registerTask('doc',['build','ngdocs','connect:docs'])
   grunt.registerTask('wd',['build','ngdocs','concurrent:docs'])
 

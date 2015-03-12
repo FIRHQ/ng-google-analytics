@@ -271,7 +271,7 @@
 (function() {
   angular.module('fir.analytics').provider("analyticsInterceptor", [
     function() {
-      var collectParamsToString, that;
+      var collectParamsToString, order, that;
       that = this;
 
       /**
@@ -291,7 +291,7 @@
        * 
        * - {boolean} - params - 设置是否收集请求的参数 默认为false
        * - {method} - method - 设置是否收集method 默认为true
-       * - {status} - status - 设置是否收集请求状态 默认为true
+       * - {status|delete} - status - 设置是否收集请求状态 默认为true(已删除，相关信息品在url后方)
        * - {status} - headers - 设置是否收集请求报文头 默认为false
        * - {status} - result - 设置是否收集请求的返回结果 默认为false
        * - {status} - all - 统一设置 默认为false
@@ -299,11 +299,11 @@
       this.collect = {
         params: false,
         method: true,
-        status: true,
         headers: false,
         result: false,
         all: false
       };
+      order = ["method", "params", "headers", "result"];
 
       /**
        * @ngdoc function
@@ -347,16 +347,13 @@
        * 将error对象根据collect设置转成string
        */
       collectParamsToString = function(error) {
-        var all, description, name, setting, value, _ref;
+        var all, description, name, setting, value, _i, _len;
         description = "";
         all = that.collect.all;
-        _ref = that.collect;
-        for (name in _ref) {
-          setting = _ref[name];
-          if (name === 'all') {
-            continue;
-          }
-          if (setting || all) {
+        for (_i = 0, _len = order.length; _i < _len; _i++) {
+          name = order[_i];
+          setting = that.collect[name];
+          if (all || setting) {
             value = error[name];
             if (!value) {
               value = "undefined";
@@ -367,6 +364,19 @@
           }
         }
         return description;
+      };
+
+      /**
+       * @ngdoc function
+       * @name beforeSend
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 发送统计前调用，如果返回false、null、undefined将不会发送统计,可在config中覆盖
+       * @param {object} error 错误请求的详细信息
+       * @return {boolean} 如果为true则发送统计，false则取消发送此次统计
+       */
+      this.beforeSend = function(error) {
+        return true;
       };
 
       /**
@@ -383,7 +393,11 @@
         var description;
         description = collectParamsToString(error);
         description = description.length > 1 ? description.substr(1) : description;
-        return ga('send', 'event', "exception_event", description, error.url);
+        if (this.beforeSend(error)) {
+          ga('send', 'event', "exception_event", description, error.url + ":" + error.status);
+          return true;
+        }
+        return false;
       };
 
       /**
@@ -398,13 +412,16 @@
        */
       this.$sendException = function(error) {
         var description;
-        description = "url:" + error.url;
+        description = "url:" + error.url + ",status:" + error.status;
         description += collectParamsToString(error);
-        ga('send', 'exception', {
-          exDescription: description,
-          exFatal: false
-        });
-        return true;
+        if (this.beforeSend(error)) {
+          ga('send', 'exception', {
+            exDescription: description,
+            exFatal: false
+          });
+          return true;
+        }
+        return false;
       };
 
       /**
