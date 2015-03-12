@@ -46,11 +46,11 @@ angular.module('fir.analytics').directive 'gaType', ['$log',($log)->
       only = if attr["gaOnly"] is '0' or attr["gaOnly"] is 'false' then false else true
 
       if !name
-        $log.error 'ga analytics has no name while return ',element
+        $log.warn 'ga analytics has no name while return ',element
         return ;
 
       if !type 
-        $log.error 'ga analytics has no type, the name is ', name,element
+        $log.warn 'ga analytics has no type, the name is ', name,element
         return ;
 
       #构造ga对象
