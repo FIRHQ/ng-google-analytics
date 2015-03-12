@@ -107,6 +107,24 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   ###
   @beforeSend = (error)->
     return true;
+
+  @hostDomain = window.location.host
+  
+  ###*
+  @ngdoc function 
+  @name isHostRequest
+  @methodOf fir.analytics.analyticsInterceptorProvider
+  @description
+  用于判断当前url是否与locatoin.host是否同一个
+  
+  ###
+  @isHostRequest = (url)->
+    if !/^http/.test(url)
+      return true
+    hostReg = new RegExp("://[\\w+\\.]*" + @hostDomain + "/")
+    return hostReg.test url
+  @isOtherRequest = (url)->
+    return !@isHostRequest(url)
   ###*
   # @ngdoc function
   # @name $sendExceptionWithEvent
@@ -122,7 +140,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     description = if description.length > 1 then description.substr(1) else description
     if @beforeSend(error)
       #category,action,name
-      ga('send','event',"exception_event",description,error.url+":"+error.status)
+      ga('send','event',"exception_event",description,error.url+"|"+error.status)
       return true
     return false
     
@@ -137,7 +155,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # @param {object} error 错误请求的详细信息
   ###
   @$sendException = (error)->
-    description = "url:#{error.url},status:#{error.status}" 
+    description = "#{error.url}|#{error.status}" 
     description += collectParamsToString(error)
     #统计出错
     if @beforeSend(error)
