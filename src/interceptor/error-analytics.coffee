@@ -5,6 +5,8 @@
 # @name fir.analytics.analyticsInterceptorProvider
 # @description
 # 包含analyticsInterceptor相关设置
+# 发送统计完整流程 replaceMethod()->exclude检查->beforeSend()->发送，其中如果exclude结果为true停止，beforeSend()为false停止。
+# 
 ###
 angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   that = @
@@ -97,6 +99,44 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     # description = if description.length > 1 then description.substr(1) else description
     return description
   ###*
+  # @ngdoc property
+  # @name exclude
+  # @propertyOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 排除的统计列表，值应该为{url:status} 模式,在执行次过滤之前会先replaceMehtod方法，用于统一某些url
+  ###
+  exclude = {}
+  ###*
+  # @ngdoc function
+  # @name addExclude
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 发送统计前调用，如果返回false、null、undefined将不会发送统计,可在config中覆盖
+  # @param {object|array} 此对象应该为以下结构{url : status| [status]}({地址：请求状态或状态数组}) 或为该结构数组
+  # @return {this}  链式。返回当前对象
+  ###
+  @addExclude = (objs)->
+    if !angular.isArray(objs) and angular.isObject(objs)
+      objs = [objs]
+    if angular.isArray objs
+      for obj in objs
+        for name,value of obj
+          status = exclude[name]
+          status = status || []
+          #缺乏重复性检查
+          if angular.isString value
+            status.push value
+          else if angular.isArray value 
+            status = Array.prototype.concat(status,value)
+          else
+            continue
+          exclude[name] = status
+    return @
+  @getExclude = ()->
+    return exclude;
+  @isInExclude = (url,status)->
+    ;
+  ###*
   # @ngdoc function
   # @name beforeSend
   # @methodOf fir.analytics.analyticsInterceptorProvider
@@ -108,21 +148,34 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @beforeSend = (error)->
     return true;
 
+  ###*
+  # @ngdoc property
+  # @name hostDomain
+  # @propertyOf fir.analytics.analyticsInterceptorProvider
+  # @description 
+  # 用于设置当前页面所处得domain域，关联isHostRequest、isOtherRequest方法的判定结果
+  ###
   @hostDomain = window.location.host
   
   ###*
-  @ngdoc function 
-  @name isHostRequest
-  @methodOf fir.analytics.analyticsInterceptorProvider
-  @description
-  用于判断当前url是否与locatoin.host是否同一个
-  
+  # @ngdoc function 
+  # @name isHostRequest
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 用于判断当前url是否与locatoin.host是否同一个
   ###
   @isHostRequest = (url)->
     if !/^http/.test(url)
       return true
     hostReg = new RegExp("://[\\w+\\.]*" + @hostDomain + "/")
     return hostReg.test url
+  ###*
+  # @ngdoc function 
+  # @name isOtherRequest
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 用于判断当前url是否与locatoin.host是否不是同一个
+  ###
   @isOtherRequest = (url)->
     return !@isHostRequest(url)
   ###*
@@ -138,9 +191,9 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @$sendExceptionWithEvent = (error)->
     description = collectParamsToString(error)
     description = if description.length > 1 then description.substr(1) else description
-    if @beforeSend(error)
+    if @beforeSend(error) #等测试用例更改之后将次判定移至公共函数$get的种
       #category,action,name
-      ga('send','event',"exception_event",description,error.url+"|"+error.status)
+      ga('send','event',"exception_event",description,error.url+" | "+error.status)
       return true
     return false
     
@@ -155,10 +208,10 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # @param {object} error 错误请求的详细信息
   ###
   @$sendException = (error)->
-    description = "#{error.url}|#{error.status}" 
+    description = "#{error.url} | #{error.status}" 
     description += collectParamsToString(error)
     #统计出错
-    if @beforeSend(error)
+    if @beforeSend(error)   #等测试用例更改之后将次判定移至公共函数$get的种
       ga('send','exception',{
         exDescription:description
         exFatal:false
@@ -198,7 +251,6 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         }
         if that.isReplace
           that.replaceMethod(error)
-
         switch that.model
           when 'event' then that.$sendExceptionWithEvent(error)
           else that.$sendException(error)

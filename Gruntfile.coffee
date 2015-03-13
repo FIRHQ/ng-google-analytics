@@ -84,7 +84,9 @@ module.exports = (grunt) ->
         title:"google-analytics Api"
     watch:
       options:
-        livereload: true
+        livereload: {
+          port:35728
+        }
       coffee:
         files:["src/**/*.coffee","test/**/*.coffee"]
         tasks:['coffee']
