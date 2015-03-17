@@ -494,7 +494,6 @@ describe("analyticsInterceptor",()->
     ))
     it("all not send",inject(()->
       provider.addExclude([{"/api/v2/app":["401","403"]},{"/api/v2/sign":"403"}])
-
       #other url
       error.url = "/api/v2/app"
       error.status = "401"
@@ -503,6 +502,13 @@ describe("analyticsInterceptor",()->
 
       error.url = "/api/v2/sign"
       error.status = "403"
+      obj = getError(error.url,error.status)
+      expect(obj.result).toBeFalsy()
+    ))
+    it("replace url ,not send",inject(()->
+      provider.addExclude([{"/api/v2/app?token=:token":["401","403"]},{"/api/v2/sign":"403"}])
+      error.url = "/api/v2/app?token=xq23214rwefwfasdfaszx"
+      error.status = "401"
       obj = getError(error.url,error.status)
       expect(obj.result).toBeFalsy()
     ))
