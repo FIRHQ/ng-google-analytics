@@ -593,12 +593,12 @@
                 result: resq.data
               };
               r = false;
+              if (that.isReplace) {
+                that.replaceMethod(error);
+              }
               if (!isInExclude(error) && that.beforeSend(error)) {
                 if (that.isFormData(error.params)) {
                   error.params = resq.config.gaParams;
-                }
-                if (that.isReplace) {
-                  that.replaceMethod(error);
                 }
                 switch (that.model) {
                   case 'event':
