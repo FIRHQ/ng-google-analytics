@@ -40,12 +40,12 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     params:false  #参数
     method:true #方法
     # status:true #状态，记在url中 
-    headers:false #请求的头
+    # headers:false #请求的头
     result:false #返回的结果
     all:false #是否统计所有
   }
   #转成字符串时字段顺序
-  order = ["method","params","headers","result"]
+  order = ["method","params","result"]
   ###*
   # @ngdoc function
   # @name replaceMethod

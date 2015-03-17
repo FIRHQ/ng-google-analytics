@@ -137,7 +137,7 @@ describe("analyticsInterceptorProvider 测试用例",()->
       error.result = "ttttt"
       provider.$sendExceptionWithEvent(error)
       expect(dsc).not.toBeNull()
-      expect(dsc).toEqual("method:post,params:"+JSON.stringify(params)+",headers:headers,result:ttttt")
+      expect(dsc).toEqual("method:post,params:"+JSON.stringify(params)+",result:ttttt")
     ))
   )
 
