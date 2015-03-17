@@ -302,11 +302,10 @@
       this.collect = {
         params: false,
         method: true,
-        headers: false,
         result: false,
         all: false
       };
-      order = ["method", "params", "headers", "result"];
+      order = ["method", "params", "result"];
 
       /**
        * @ngdoc function
