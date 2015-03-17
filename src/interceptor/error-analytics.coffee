@@ -6,6 +6,7 @@
 # @description
 # 包含analyticsInterceptor相关设置
 # 发送统计完整流程 replaceMethod()->exclude检查->beforeSend()->发送，其中如果exclude结果为true停止，beforeSend()为false停止。
+# 注：如果content['Content-Type'] = undefined (multipart/form-data; 即文件模式)是，无法收集到正确地params，请在config对象中增加gaParams参数已确保统计到正确地参数
 # 
 ###
 angular.module('fir.analytics').provider("analyticsInterceptor",[()->
@@ -93,6 +94,8 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         value = error[name]
         if !value
           value = "undefined"
+        else if that.isBlob(value) or that.isFormData(value)
+          value = value.toString()
         else if angular.isObject(value)
           value = JSON.stringify(value)
         description+=",#{name}:" + value
@@ -124,18 +127,51 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           status = exclude[name]
           status = status || []
           #缺乏重复性检查
-          if angular.isString value
+          if angular.isNumber value
+            status.push value
+          else if angular.isString value #status 类型为字符串则全部转成int,NaN则抛弃
+            value = parseInt(value)
+            continue if value is NaN
             status.push value
           else if angular.isArray value 
-            status = Array.prototype.concat(status,value)
+            for vs in value
+              vs = parseInt(vs)
+              continue if vs is NaN
+              status.push vs
+            # status = Array.prototype.concat(status,value)
           else
             continue
           exclude[name] = status
     return @
+  ###*
+  # @ngdoc function
+  # @name getExclude
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 获取排除对象，此方法多用于测试，最好不要在server之外使用
+  # @return {object}  返回排除统计列表的对象，见exclude属性
+  ###
   @getExclude = ()->
     return exclude;
-  @isInExclude = (url,status)->
-    ;
+  ###*
+  # @ngdoc function
+  # @name $clearExclude
+  # @methodOf fir.analytics.analyticsInterceptorProvider
+  # @description
+  # 私有方法，用于重置exclude，此方法用于测试
+  # @return {object}  返回排除统计列表的对象，见exclude属性
+  ###
+  @$clearExclude = ()->
+    exclude = {}
+  #用于判断是否该排除，true则说明应该排除
+  isInExclude = (error)->
+    status = exclude[error.url]
+    return false unless status
+    for ss in status 
+      if ss is parseInt(error.status) #if status is undefined?
+        return true
+    return false
+    
   ###*
   # @ngdoc function
   # @name beforeSend
@@ -191,11 +227,8 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @$sendExceptionWithEvent = (error)->
     description = collectParamsToString(error)
     description = if description.length > 1 then description.substr(1) else description
-    if @beforeSend(error) #等测试用例更改之后将次判定移至公共函数$get的种
-      #category,action,name
-      ga('send','event',"exception_event",description,error.url+" | "+error.status)
-      return true
-    return false
+    #category,action,name
+    ga('send','event',"exception_event",description,error.url+" | "+error.status)
     
   ###*
   # @ngdoc function
@@ -211,13 +244,10 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
     description = "#{error.url} | #{error.status}" 
     description += collectParamsToString(error)
     #统计出错
-    if @beforeSend(error)   #等测试用例更改之后将次判定移至公共函数$get的种
-      ga('send','exception',{
-        exDescription:description
-        exFatal:false
-      })  
-      return true 
-    return false   
+    ga('send','exception',{
+      exDescription:description
+      exFatal:false
+    })  
   
   ###*
   # @ngdoc object
@@ -236,6 +266,14 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # @requires $q 
   ###
 
+  @isFormData = (obj)->
+    return false unless obj
+    return obj.constructor.name is 'FormData'
+
+  @isBlob = (obj)->
+    return false unless obj
+    return obj.constructor.name is 'Blob'
+
   @$get = ['$q',($q)->
     {
       responseError:(resq)->
@@ -249,17 +287,44 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           headers:resq.config.headers
           result:resq.data
         }
-        if that.isReplace
-          that.replaceMethod(error)
-        switch that.model
-          when 'event' then that.$sendExceptionWithEvent(error)
-          else that.$sendException(error)
+        r = false 
+        #统计异常
+        if !isInExclude(error) and that.beforeSend(error) 
+          if that.isFormData(error.params)
+            error.params = resq.config.gaParams
+
+          if that.isReplace
+            that.replaceMethod(error)
+          switch that.model
+            when 'event' then that.$sendExceptionWithEvent(error)
+            else that.$sendException(error)
+          r = true
+          resq.collectError = error #用于测试。
+
+        resq.isCollect = r #用于测试,true表明已经发送统计
         $q.reject(resq)
     }
   ]
+
+
+  # #xx
+  # $httpProvider.default.transformRequest.push((data, headersGetter)->
+  #   console.log data
+  #   console.log headersGetter
+  # )
   return @
 ])
 
+#不能得到正确地data（json）类型
+# angular.module('fir.analytics').config(["$httpProvider",($httpProvider)->
+#   $httpProvider.defaults.transformRequest.push((data, headersGetter)->
+#     # console.log data
+#     # console.log headersGetter
+#     if data
+#       console.log data
+
+#   )
+# ])
 # https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers.onerror
   # _pre = window.onerror
 # window.onerror = (msg,url,line,col,errorObj)->
