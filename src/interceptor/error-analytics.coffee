@@ -289,12 +289,12 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         }
         r = false 
         #统计异常
+        if that.isReplace
+          that.replaceMethod(error)
+          
         if !isInExclude(error) and that.beforeSend(error) 
           if that.isFormData(error.params)
             error.params = resq.config.gaParams
-
-          if that.isReplace
-            that.replaceMethod(error)
           switch that.model
             when 'event' then that.$sendExceptionWithEvent(error)
             else that.$sendException(error)
