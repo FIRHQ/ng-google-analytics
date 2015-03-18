@@ -4,12 +4,15 @@
  * @name fir.analytics.analyticsInterceptorProvider
  * @description
  * 包含analyticsInterceptor相关设置
+ * 发送统计完整流程 replaceMethod()->exclude检查->beforeSend()->发送，其中如果exclude结果为true停止，beforeSend()为false停止。
+ * 注：如果content['Content-Type'] = undefined (multipart/form-data; 即文件模式)是，无法收集到正确地params，请在config对象中增加gaParams参数已确保统计到正确地参数
+ *
  */
 
 (function() {
   angular.module('fir.analytics').provider("analyticsInterceptor", [
     function() {
-      var collectParamsToString, order, that;
+      var collectParamsToString, exclude, isInExclude, order, parseUrl, that;
       that = this;
 
       /**
@@ -30,18 +33,17 @@
        * - {boolean} - params - 设置是否收集请求的参数 默认为false
        * - {method} - method - 设置是否收集method 默认为true
        * - {status|delete} - status - 设置是否收集请求状态 默认为true(已删除，相关信息品在url后方)
-       * - {status} - headers - 设置是否收集请求报文头 默认为false
+       * - {status} - headers - 设置是否收集请求报文头 默认为false(已删除)
        * - {status} - result - 设置是否收集请求的返回结果 默认为false
        * - {status} - all - 统一设置 默认为false
        */
       this.collect = {
         params: false,
         method: true,
-        headers: false,
         result: false,
         all: false
       };
-      order = ["method", "params", "headers", "result"];
+      order = ["method", "params", "result"];
 
       /**
        * @ngdoc function
@@ -95,6 +97,8 @@
             value = error[name];
             if (!value) {
               value = "undefined";
+            } else if (that.isBlob(value) || that.isFormData(value)) {
+              value = value.toString();
             } else if (angular.isObject(value)) {
               value = JSON.stringify(value);
             }
@@ -102,6 +106,101 @@
           }
         }
         return description;
+      };
+
+      /**
+       * @ngdoc property
+       * @name exclude
+       * @propertyOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 排除的统计列表，值应该为{url:status} 模式,在执行次过滤之前会先replaceMehtod方法，用于统一某些url
+       */
+      exclude = {};
+
+      /**
+       * @ngdoc function
+       * @name addExclude
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 发送统计前调用，如果返回false、null、undefined将不会发送统计,可在config中覆盖
+       * @param {object|array} 此对象应该为以下结构{url : status| [status]}({地址：请求状态或状态数组}) 或为该结构数组
+       * @return {this}  链式。返回当前对象
+       */
+      this.addExclude = function(objs) {
+        var name, obj, status, value, vs, _i, _j, _len, _len1;
+        if (!angular.isArray(objs) && angular.isObject(objs)) {
+          objs = [objs];
+        }
+        if (angular.isArray(objs)) {
+          for (_i = 0, _len = objs.length; _i < _len; _i++) {
+            obj = objs[_i];
+            for (name in obj) {
+              value = obj[name];
+              status = exclude[name];
+              status = status || [];
+              if (angular.isNumber(value)) {
+                status.push(value);
+              } else if (angular.isString(value)) {
+                value = parseInt(value);
+                if (value === NaN) {
+                  continue;
+                }
+                status.push(value);
+              } else if (angular.isArray(value)) {
+                for (_j = 0, _len1 = value.length; _j < _len1; _j++) {
+                  vs = value[_j];
+                  vs = parseInt(vs);
+                  if (vs === NaN) {
+                    continue;
+                  }
+                  status.push(vs);
+                }
+              } else {
+                continue;
+              }
+              exclude[name] = status;
+            }
+          }
+        }
+        return this;
+      };
+
+      /**
+       * @ngdoc function
+       * @name getExclude
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 获取排除对象，此方法多用于测试，最好不要在server之外使用
+       * @return {object}  返回排除统计列表的对象，见exclude属性
+       */
+      this.getExclude = function() {
+        return exclude;
+      };
+
+      /**
+       * @ngdoc function
+       * @name $clearExclude
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 私有方法，用于重置exclude，此方法用于测试
+       * @return {object}  返回排除统计列表的对象，见exclude属性
+       */
+      this.$clearExclude = function() {
+        return exclude = {};
+      };
+      isInExclude = function(error) {
+        var ss, status, _i, _len;
+        status = exclude[error.url];
+        if (!status) {
+          return false;
+        }
+        for (_i = 0, _len = status.length; _i < _len; _i++) {
+          ss = status[_i];
+          if (ss === parseInt(error.status)) {
+            return true;
+          }
+        }
+        return false;
       };
 
       /**
@@ -115,6 +214,60 @@
        */
       this.beforeSend = function(error) {
         return true;
+      };
+      parseUrl = function(error) {
+        var match, param, paramStr, pr, str, url, _i, _len;
+        url = error.url;
+        param = error.params || {};
+        pr = /(\w+)=([^&^#]*)/g;
+        paramStr = url.match(pr);
+        error.url = url.replace(pr, "$1=:$1");
+        if (!paramStr) {
+          return;
+        }
+        for (_i = 0, _len = paramStr.length; _i < _len; _i++) {
+          str = paramStr[_i];
+          match = str.split("=");
+          match[1] = match[1] === '' ? null : match[1];
+          param[match[0]] = match[1];
+        }
+        return error.params = param;
+      };
+
+      /**
+       * @ngdoc property
+       * @name hostDomain
+       * @propertyOf fir.analytics.analyticsInterceptorProvider
+       * @description 
+       * 用于设置当前页面所处得domain域，关联isHostRequest、isOtherRequest方法的判定结果
+       */
+      this.hostDomain = window.location.host;
+
+      /**
+       * @ngdoc function 
+       * @name isHostRequest
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 用于判断当前url是否与locatoin.host是否同一个
+       */
+      this.isHostRequest = function(url) {
+        var hostReg;
+        if (!/^http/.test(url)) {
+          return true;
+        }
+        hostReg = new RegExp("://[\\w+\\.]*" + this.hostDomain + "/");
+        return hostReg.test(url);
+      };
+
+      /**
+       * @ngdoc function 
+       * @name isOtherRequest
+       * @methodOf fir.analytics.analyticsInterceptorProvider
+       * @description
+       * 用于判断当前url是否与locatoin.host是否不是同一个
+       */
+      this.isOtherRequest = function(url) {
+        return !this.isHostRequest(url);
       };
 
       /**
@@ -131,11 +284,7 @@
         var description;
         description = collectParamsToString(error);
         description = description.length > 1 ? description.substr(1) : description;
-        if (this.beforeSend(error)) {
-          ga('send', 'event', "exception_event", description, error.url + ":" + error.status);
-          return true;
-        }
-        return false;
+        return ga('send', 'event', "exception_event", description, error.url + " | " + error.status);
       };
 
       /**
@@ -150,16 +299,12 @@
        */
       this.$sendException = function(error) {
         var description;
-        description = "url:" + error.url + ",status:" + error.status;
+        description = "" + error.url + " | " + error.status;
         description += collectParamsToString(error);
-        if (this.beforeSend(error)) {
-          ga('send', 'exception', {
-            exDescription: description,
-            exFatal: false
-          });
-          return true;
-        }
-        return false;
+        return ga('send', 'exception', {
+          exDescription: description,
+          exFatal: false
+        });
       };
 
       /**
@@ -178,29 +323,51 @@
        * </pre>
        * @requires $q
        */
+      this.isFormData = function(obj) {
+        if (!obj) {
+          return false;
+        }
+        return obj.constructor.name === 'FormData';
+      };
+      this.isBlob = function(obj) {
+        if (!obj) {
+          return false;
+        }
+        return obj.constructor.name === 'Blob';
+      };
       this.$get = [
         '$q', function($q) {
           return {
             responseError: function(resq) {
-              var error;
+              var error, r;
               error = {
                 url: resq.config.url,
                 method: resq.config.method,
-                params: resq.config.data,
+                params: resq.config.data || {},
                 status: resq.status,
                 headers: resq.config.headers,
                 result: resq.data
               };
+              r = false;
+              parseUrl(error);
               if (that.isReplace) {
                 that.replaceMethod(error);
               }
-              switch (that.model) {
-                case 'event':
-                  that.$sendExceptionWithEvent(error);
-                  break;
-                default:
-                  that.$sendException(error);
+              if (!isInExclude(error) && that.beforeSend(error)) {
+                if (that.isFormData(error.params)) {
+                  error.params = resq.config.gaParams;
+                }
+                switch (that.model) {
+                  case 'event':
+                    that.$sendExceptionWithEvent(error);
+                    break;
+                  default:
+                    that.$sendException(error);
+                }
+                r = true;
+                resq.collectError = error;
               }
+              resq.isCollect = r;
               return $q.reject(resq);
             }
           };
