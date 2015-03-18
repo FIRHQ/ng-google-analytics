@@ -513,4 +513,34 @@ describe("analyticsInterceptor",()->
       expect(obj.result).toBeFalsy()
     ))
   )
+  describe("collect",()->
+    error = {}
+    it("URL params",inject(()->
+      provider.addExclude([{"/api/v2/app?token=:token":["401","403"]},{"/api/v2/sign":"403"}])
+      error.url = "/api/v2/app?token=xq23214rwefwfasdfaszx"
+      error.status = "400"
+      obj = getError(error.url,error.status)
+      expect(obj.result).toBeTruthy()
+      expect(obj.error.params).not.toBeNull()
+      expect(obj.error.params.token).toEqual("xq23214rwefwfasdfaszx")
+    ))
+    it("URL params",inject(()->
+      error.url = "/api/v2/app?token=xq23214rwefwfasdfaszx&email=drt@dgg.com"
+      error.status = "400"
+      obj = getError(error.url,error.status)
+      expect(obj.result).toBeTruthy()
+      expect(obj.error.params).not.toBeNull()
+      expect(obj.error.params.token).toEqual("xq23214rwefwfasdfaszx")
+      expect(obj.error.params.email).toEqual("drt@dgg.com")
+      
+      error.url = "/api/v2/app?token=xq23214rwefwfasdfaszx&pwd=&email=drt@dgg.com"
+      error.status = "400"
+      obj = getError(error.url,error.status)
+      expect(obj.result).toBeTruthy()
+      expect(obj.error.params).not.toBeNull()
+      expect(obj.error.params.token).toEqual("xq23214rwefwfasdfaszx")
+      expect(obj.error.params.email).toEqual("drt@dgg.com")
+      expect(obj.error.params.pwd).toBeNull()
+    ))
+  )
 )

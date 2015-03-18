@@ -31,7 +31,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   # - {boolean} - params - 设置是否收集请求的参数 默认为false
   # - {method} - method - 设置是否收集method 默认为true
   # - {status|delete} - status - 设置是否收集请求状态 默认为true(已删除，相关信息品在url后方)
-  # - {status} - headers - 设置是否收集请求报文头 默认为false
+  # - {status} - headers - 设置是否收集请求报文头 默认为false(已删除)
   # - {status} - result - 设置是否收集请求的返回结果 默认为false
   # - {status} - all - 统一设置 默认为false
   ###
@@ -184,6 +184,20 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
   @beforeSend = (error)->
     return true;
 
+  parseUrl = (error)->
+    url = error.url
+    param = error.params || {}
+    pr = /(\w+)=([^&^#]*)/g
+    paramStr = url.match(pr)
+    error.url = url.replace(pr,"$1=:$1")
+    return unless paramStr
+    for str in paramStr
+      # match = pr.exec(str)#bug with email ，match while null
+      match = str.split("=")
+      match[1] = if match[1] is '' then null else match[1]
+      param[match[0]] = match[1]
+    error.params = param
+
   ###*
   # @ngdoc property
   # @name hostDomain
@@ -282,12 +296,13 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         error = {
           url : resq.config.url
           method : resq.config.method
-          params : resq.config.data
+          params : resq.config.data || {}
           status : resq.status
           headers:resq.config.headers
           result:resq.data
         }
         r = false 
+        parseUrl(error)
         #统计异常
         if that.isReplace
           that.replaceMethod(error)

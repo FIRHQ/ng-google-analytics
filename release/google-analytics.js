@@ -274,7 +274,7 @@
 (function() {
   angular.module('fir.analytics').provider("analyticsInterceptor", [
     function() {
-      var collectParamsToString, exclude, isInExclude, order, that;
+      var collectParamsToString, exclude, isInExclude, order, parseUrl, that;
       that = this;
 
       /**
@@ -295,7 +295,7 @@
        * - {boolean} - params - 设置是否收集请求的参数 默认为false
        * - {method} - method - 设置是否收集method 默认为true
        * - {status|delete} - status - 设置是否收集请求状态 默认为true(已删除，相关信息品在url后方)
-       * - {status} - headers - 设置是否收集请求报文头 默认为false
+       * - {status} - headers - 设置是否收集请求报文头 默认为false(已删除)
        * - {status} - result - 设置是否收集请求的返回结果 默认为false
        * - {status} - all - 统一设置 默认为false
        */
@@ -477,6 +477,24 @@
       this.beforeSend = function(error) {
         return true;
       };
+      parseUrl = function(error) {
+        var match, param, paramStr, pr, str, url, _i, _len;
+        url = error.url;
+        param = error.params || {};
+        pr = /(\w+)=([^&^#]*)/g;
+        paramStr = url.match(pr);
+        error.url = url.replace(pr, "$1=:$1");
+        if (!paramStr) {
+          return;
+        }
+        for (_i = 0, _len = paramStr.length; _i < _len; _i++) {
+          str = paramStr[_i];
+          match = str.split("=");
+          match[1] = match[1] === '' ? null : match[1];
+          param[match[0]] = match[1];
+        }
+        return error.params = param;
+      };
 
       /**
        * @ngdoc property
@@ -587,12 +605,13 @@
               error = {
                 url: resq.config.url,
                 method: resq.config.method,
-                params: resq.config.data,
+                params: resq.config.data || {},
                 status: resq.status,
                 headers: resq.config.headers,
                 result: resq.data
               };
               r = false;
+              parseUrl(error);
               if (that.isReplace) {
                 that.replaceMethod(error);
               }
