@@ -2,17 +2,19 @@ describe('ui.route $state change test',()->
   $compile = null
   $rootScope = null
   state = null 
-
+  timeout = null
   successEvent = null 
   callFn = angular.noop
-
+  hasCallPageView = false 
   config = null 
   beforeEach(module('test'))
-  beforeEach(inject((_$compile_, _$rootScope_,$state,analyticsConfig)->
+  beforeEach(inject((_$compile_, _$rootScope_,$state,analyticsConfig,$timeout)->
     $compile = _$compile_;
     $rootScope = _$rootScope_;
     state = $state
     config = analyticsConfig
+    hasCallPageView  = false 
+    timeout = $timeout
     #监听事件
     successEvent = $rootScope.$on('$stateChangeSuccess',(evt,toState,toParam,fromState,fromParma)->
       callFn(evt,toState,toParam,fromState,fromParma)
@@ -20,8 +22,11 @@ describe('ui.route $state change test',()->
   ))
   afterEach(()->
     $rootScope.$apply();
+    timeout.flush()
     callFn = angular.noop
     window.ga = angular.noop
+    expect(hasCallPageView).toBeTruthy()
+    timeout.verifyNoPendingTasks()
   )
   it("base",()->
 
@@ -29,6 +34,7 @@ describe('ui.route $state change test',()->
       expect(toState.name).toBe("test1")
     window.ga = (method,action,options)->
       if method is 'send' and action is 'pageview'
+        hasCallPageView = true
         title = options.title
         page = options.page
         expect('test1').toBe(page)
@@ -37,7 +43,6 @@ describe('ui.route $state change test',()->
   )
   describe('successEvent 统计加前缀',()->
 
-    hasCallPageView = false
     pageViewCallFn = angular.noop
     beforeEach(()->
       hasCallPageView = false;
@@ -51,7 +56,6 @@ describe('ui.route $state change test',()->
       config.preState('')
     )
     it('1',()->
-      expect(hasCallPageView).toBeFalsy()
       callFn = (evt,toState)->
         expect(toState.name).toBe("test1")
 
@@ -61,7 +65,6 @@ describe('ui.route $state change test',()->
       config.preState('dashboard')
       state.go('test1')
       $rootScope.$apply();
-      expect(hasCallPageView).toBeTruthy()
     )
   )
 )
