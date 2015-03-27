@@ -43,7 +43,7 @@
   });
 
   analytics.run([
-    '$rootScope', '$log', 'analyticsConfig', function($rootScope, $log, analyticsConfig) {
+    '$rootScope', '$log', 'analyticsConfig', '$timeout', function($rootScope, $log, analyticsConfig, $timeout) {
       console.log;
       if (!window.ga) {
         window.ga = function() {};
@@ -54,16 +54,18 @@
         return ga('set', '&uid', user.id);
       });
       $rootScope.$on('$stateChangeSuccess', function(evt, toState) {
-        var page, title;
-        title = $rootScope.title || document.title;
-        page = analyticsConfig.preState() + toState.name || window.location.pathname;
-        
-        ga('send', 'pageview', {
-          title: title,
-          page: page,
-          location: page
-        });
-        return ga('set', 'location', '');
+        return $timeout(function() {
+          var page, title;
+          title = $rootScope.title || document.title;
+          page = analyticsConfig.preState() + toState.name || window.location.pathname;
+          
+          ga('send', 'pageview', {
+            title: title,
+            page: page,
+            location: page
+          });
+          return ga('set', 'location', '');
+        }, 100);
       });
       return $rootScope.$on('cancellation', function(evt) {
         return ga('set', '&uid', null);
