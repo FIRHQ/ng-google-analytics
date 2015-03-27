@@ -28,7 +28,7 @@ analytics.provider('analyticsConfig',()->
   return @
 )
 #事件响应并统计
-analytics.run(['$rootScope','$log','analyticsConfig',($rootScope,$log,analyticsConfig)->
+analytics.run(['$rootScope','$log','analyticsConfig','$timeout',($rootScope,$log,analyticsConfig,$timeout)->
   console.log 
   if !window.ga 
     window.ga = ()->
@@ -39,12 +39,17 @@ analytics.run(['$rootScope','$log','analyticsConfig',($rootScope,$log,analyticsC
     ga('set','&uid',user.id)
   )
   #切换视图
+  #ui.route先发$stateChangeSuccess事件，后进controller
+  #首次刷新会触发$locationChangeSuccess事件，之后由ui.route调用pushstate接口后触发此事件
+  #$timeout能够用于测试，setTimeout不好测试
   $rootScope.$on('$stateChangeSuccess',(evt, toState)->
-    title =  $rootScope.title || document.title
-    page = analyticsConfig.preState() + toState.name|| window.location.pathname
-    $log.log 'pageview',page,'title',title
-    ga('send', 'pageview',{title,page,location:page})
-    ga('set','location','')
+    $timeout(()->
+      title =  $rootScope.title || document.title
+      page = analyticsConfig.preState() + toState.name|| window.location.pathname
+      $log.log 'pageview',page,'title',title
+      ga('send', 'pageview',{title,page,location:page})
+      ga('set','location','')
+    ,100)
     # setTimeout(()->
     #   selects = ["input[type='button']","button","a"]
     #   for select in selects 
