@@ -303,6 +303,7 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
         }
         r = false 
         parseUrl(error)
+        delete error.params.password
         #统计异常
         if that.isReplace
           that.replaceMethod(error)
