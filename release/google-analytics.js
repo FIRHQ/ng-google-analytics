@@ -603,24 +603,23 @@
         '$q', function($q) {
           return {
             responseError: function(resq) {
-              var error, r;
+              var config, error, r;
+              config = resq.config;
               error = {
-                url: resq.config.url,
-                method: resq.config.method,
-                params: resq.config.data || {},
+                url: config.url,
+                method: config.method,
+                params: config.gaParams || config.data || {},
                 status: resq.status,
-                headers: resq.config.headers,
+                headers: config.headers,
                 result: resq.data
               };
               r = false;
               parseUrl(error);
+              delete error.params.password;
               if (that.isReplace) {
                 that.replaceMethod(error);
               }
               if (!isInExclude(error) && that.beforeSend(error)) {
-                if (that.isFormData(error.params)) {
-                  error.params = resq.config.gaParams;
-                }
                 switch (that.model) {
                   case 'event':
                     that.$sendExceptionWithEvent(error);

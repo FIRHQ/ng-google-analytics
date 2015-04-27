@@ -2,3 +2,4 @@ bower_components
 .compiled
 node_modules
 docs
+.*

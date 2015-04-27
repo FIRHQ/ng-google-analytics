@@ -293,12 +293,13 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
       responseError:(resq)->
         #不记录params列表
         # params = resq.config.params || {}
+        config = resq.config
         error = {
-          url : resq.config.url
-          method : resq.config.method
-          params : resq.config.data || {}
+          url : config.url
+          method : config.method
+          params : config.gaParams || config.data || {}
           status : resq.status
-          headers:resq.config.headers
+          headers:config.headers
           result:resq.data
         }
         r = false 
@@ -309,8 +310,6 @@ angular.module('fir.analytics').provider("analyticsInterceptor",[()->
           that.replaceMethod(error)
           
         if !isInExclude(error) and that.beforeSend(error) 
-          if that.isFormData(error.params)
-            error.params = resq.config.gaParams
           switch that.model
             when 'event' then that.$sendExceptionWithEvent(error)
             else that.$sendException(error)
