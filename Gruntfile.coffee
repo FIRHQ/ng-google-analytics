@@ -48,7 +48,7 @@ module.exports = (grunt) ->
       options:
         files:['package.json','bower.json']
         commitFiles:['-a']
-        pushTo:'gitlab'
+        pushTo:'github'
     karma:
       unit:
         configFile:"karma.conf.js"
